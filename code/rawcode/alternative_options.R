@@ -1,81 +1,5 @@
-setwd("C:/Users/Josh.Josh-PC/Documents/DataScience/9-DataProducts/Projects/killed_by_police")
-
-library(RCurl)
-library(data.table)
-library(ggplot2)
-library(XML)
-library(xlsx)
-
-#Loading data
-thecounted = fread("data/the-counted-enriched.csv",showProgress = FALSE)
-#thecounted = fread("data/the-counted.csv",showProgress=FALSE)
 
 
-combined_state_stats = fread("data/combined_state_stats.csv",showProgress = FALSE)
-#Data by state
-
-
-#Counting killings by state, need to calculate # killed to sort in plot. 
-#Equivalent in dplyr of: group_by(thecounted,state) %>% summarize(killed=n()) %>% arrange(-killed)
-thecounted_by_state = thecounted[,.(killed=.N),by = .(state)][order(-killed)]
-
-ggplot(thecounted_by_state[1:25,],aes(x=reorder(state,killed),y=killed)) + 
-        geom_bar(stat='identity') + 
-        coord_flip() + 
-        labs(x = "State (Top 25)",y="Number of People Killed by Police") +
-        ggtitle("Number of People Killed by Police by State\n2015")
-
-
-#As state/race populations vary significantly, counts are not useful for comparison so so demographic data is required
-state_pop = fread("http://www.census.gov/popest/data/state/asrh/2014/files/SCPRC-EST2014-18+POP-RES.csv",showProgress = FALSE)
-state_codes = fread("https://raw.githubusercontent.com/kitjosh1050/dataquest_p04_police_killings/master/state_codes.csv",showProgress = FALSE)
-
-#Exclude national and Puerto Rico, equivalent in ddplyr of 
-#Equivalent in dplyr of: filter(state_pop,STATE %in% c(0,72)) %>% select(NAME,POPESTIMATE2014) %>% rename(name=NAME)
-state_pop = state_pop[!(STATE %in% c(0,72)),.(name=NAME,POPESTIMATE2014)]
-
-#This is an inner join in data.table (state_pop looking up values in state_codes on set key and only returning matches)
-#Equivalent in base R of: merge(state_pop,state_codes,by.x="name",by.y="name")
-setkey(state_codes,name)
-state_pop = state_codes[state_pop]
-
-#This is a left outer join in data.table
-#Equivalent in base R of: merge(state_pop,thecounted_by_state,by.x="state",by.y="state",all.x =TRUE)
-#Also used here is chaining, where code in each pair of square brackets is executed in order, left to right, similar to %>% in dplyr
-setkey(state_pop,state)
-setkey(thecounted_by_state,state)
-thecounted_by_state = thecounted_by_state[state_pop,nomatch=NA][is.na(killed),killed:=0
-                                                                ][,killedpermillion:=killed/POPESTIMATE2014*1000000
-                                                                  ][order(-killedpermillion)]
-
-#Killed by state by population
-ggplot(thecounted_by_state[1:25,],aes(x=reorder(state,killedpermillion),y=killedpermillion)) + 
-        geom_bar(stat='identity',fill="#F8766D") + 
-        geom_text(aes(label=paste("rate=",round(killedpermillion,1),", n=",killed,sep=''),y=0),hjust=0,size=4) + 
-        coord_flip() + 
-        labs(x = " State (Top 25)", y = "Killed per Million Population") + 
-        ggtitle("Rate of People Killed by Police in the U.S. in 2015 by State")
-
-#getting some extra data to see if violent crime, officers play a role 
-violent_crime = data.table(read.xlsx("data/table_5_crime_in_the_united_states_by_state_2014.xls",sheetIndex=1,startRow=4,header=TRUE,stringsAsFactors=FALSE))
-
-#In data.table, to refer to columns by number in j section, with=FALSE argument is required, see data.table FAQ for rationale
-numeric_cols = colnames(violent_crime[,4:14,with=FALSE])
-
-#.SD is Sub Data.table, with which a function can be applied when the applicable columns are specified with .SDcols argument
-violent_crime[,(numeric_cols):=lapply(.SD,function(x) as.numeric(ifelse(x==" ",NA,x))),.SDcols=numeric_cols]
-
-#A "fill down" method can be applied by grouping on an aggregate function
-violent_crime[,State := State[1], by = cumsum(!is.na(State))]
-violent_crime = violent_crime[grepl("Total",Area) & State != "PUERTO RICO"]
-
-violent_crime[,State := trimws(tolower(gsub("[0-9,]","",violent_crime[,State])))]
-setkey(violent_crime,State)
-thecounted_by_state[,name := tolower(name)]
-setkey(thecounted_by_state,name)
-
-crime_counted = thecounted_by_state[violent_crime]
-crime_counted[,c("violentcrimepermillion","murderpermillion"):=list(Violent.crime1/Population*1000000,Murder.and..nonnegligent..manslaughter/Population*1000000)]
 
 #Murder per million vs violent crime per million
 g <- ggplot(crime_counted,aes(x=murderpermillion,y=killedpermillion,label=state))
@@ -84,11 +8,6 @@ g + geom_point() + geom_smooth(method="lm") +
         geom_text()
 
 
-#Violent crime is sum of Murder.and.nonnegligent manslauter, Rape (revised definition), Robbery, Aggravated.assault
-g <- ggplot(crime_counted,aes(x=violentcrimepermillion,y=killedpermillion,label=state))
-g + geom_point() + geom_smooth(method="lm") + 
-        scale_x_continuous(limits=c(0, max(crime_counted$violentcrimepermillion))) + 
-        geom_text()
 
 crime_counted_no_dc = crime_counted[state != "DC"]
 
@@ -101,38 +20,7 @@ g <- ggplot(crime_counted_no_dc,aes(x=murderpermillion,y=killedpermillion,label=
 g + geom_point() + geom_smooth(method="lm") + scale_x_continuous(limits=c(0, max(crime_counted_no_dc$murderpermillion))) + geom_text()
 
 
-#Note: first two Male/Female columns are police officers, second two are civilian employees
-police = data.table(read.xlsx("data/Table_77_Full_time_Law_Enforcement_Employess_by_State_2014.xls",sheetIndex=1,startRow=5,header=TRUE,stringsAsFactors=FALSE))
-police[,police_officers:=Male+Female]
 
-police[,State := trimws(tolower(gsub("\n","",NA.)))]
-
-
-#West Viriginia is missing for some reason in 2014 stats so use 2013
-police2013 = data.table(read.xlsx("data/table_77_full_time_law_enforcement_employess_by_state_2013.xls",sheetIndex=1,startRow=5,header=TRUE,stringsAsFactors=FALSE))
-police2013[,police_officers:=Male+Female]
-police2013[,State := trimws(tolower(gsub("\n","",NA.)))]
-police2013 = police2013[State=="west virginia"]
-
-police =rbindlist(list(police,police2013))
-police = police[State != " NA"]
-
-setkey(police,State)
-
-
-
-combined_state_stats = police[crime_counted][,.(state,State,POPESTIMATE2014,killed,Violent.crime1,Murder.and..nonnegligent..manslaughter,police_officers)]
-
-setnames(combined_state_stats,c("State","POPESTIMATE2014","killed","Violent.crime1","Murder.and..nonnegligent..manslaughter","police_officers"),c("state_name","population2014","killedbypolice2015","violent_crime2014","murder_nonnegligent_manslaughter2014","police_officers2014"))
-
-combined_state_stats[,c("killedbypolice2015_per100k",
-                        "violent_crime2014_per100k",
-                        "murder_nonnegligent_manslaughter2014_per100k",
-                        "police_officers2014_per100k"):=
-                             list(killedbypolice2015/population2014*100000,
-                                  violent_crime2014/population2014*100000,
-                                  murder_nonnegligent_manslaughter2014/population2014*100000,
-                                  police_officers2014/population2014*100000)]
 
 
 combined_state_stats_no_dc = combined_state_stats[state!="DC"]
@@ -230,15 +118,15 @@ thecounted_byrace = thecounted[raceethnicity == "Arab-American",raceethnicity:="
 
 racepop = fread("http://www.census.gov/popest/data/state/asrh/2014/files/SC-EST2014-ALLDATA6.csv",showProgress = FALSE)
 White = racepop[ORIGIN==1 & SEX==0 & RACE==1,
-                 .(Pop=sum(POPESTIMATE2014))]$Pop
+                .(Pop=sum(POPESTIMATE2014))]$Pop
 Black = racepop[ORIGIN==1 & SEX==0 & RACE==2,
-                 .(Pop=sum(POPESTIMATE2014))]$Pop
+                .(Pop=sum(POPESTIMATE2014))]$Pop
 NativeAmerican = racepop[ORIGIN==1 & SEX==0 & RACE==3,
-                          .(Pop=sum(POPESTIMATE2014))]$Pop
+                         .(Pop=sum(POPESTIMATE2014))]$Pop
 AsianPacific = racepop[ORIGIN==1 & SEX==0 & RACE %in% c(4,5),
-                        .(Pop=sum(POPESTIMATE2014))]$Pop
+                       .(Pop=sum(POPESTIMATE2014))]$Pop
 HispanicLatino = racepop[ORIGIN==2 & SEX==0,
-                          .(Pop=sum(POPESTIMATE2014))]$Pop
+                         .(Pop=sum(POPESTIMATE2014))]$Pop
 
 population = c(AsianPacific,Black,HispanicLatino,NativeAmerican,White)
 raceethnicity = sort(thecounted_byrace$raceethnicity)
@@ -251,8 +139,8 @@ thecounted_byrace = population_byrace[thecounted_byrace]
 
 
 thecounted_byrace = thecounted_byrace[,c("killedpermillion","unarmedkilledpermillion") := 
-                                    list(killed/population*1000000,
-                                         killed_while_unarmed/population*1000000)]
+                                              list(killed/population*1000000,
+                                                   killed_while_unarmed/population*1000000)]
 
 
 ggplot(thecounted_byrace,aes(x=reorder(raceethnicity,killedpermillion),y=killedpermillion)) + 
@@ -312,9 +200,9 @@ murders = data.table(race=c("White","Black"),population=c(White,Black),number=c(
 victims = data.table(race=c("White","Black"),population=c(White,Black),number=c(5537,6261),activity="Murder as Victim")
 
 White_All = racepop[ORIGIN==0 & SEX==0 & RACE==1,
-                .(Pop=sum(POPESTIMATE2014))]$Pop
+                    .(Pop=sum(POPESTIMATE2014))]$Pop
 Black_All = racepop[ORIGIN==0 & SEX==0 & RACE==2,
-                .(Pop=sum(POPESTIMATE2014))]$Pop
+                    .(Pop=sum(POPESTIMATE2014))]$Pop
 
 White_Prop_NonHisp = White/White_All
 Black_Prop_NonHisp = Black/Black_All
@@ -354,11 +242,7 @@ ggplot(combined_state_stats,aes(x=violent_crime2014_per100k,y=killedbypolice2015
 #by or to those that live there. This may affect states for Maryland, Virginia as well, but not to an extent to exclude them?
 
 combined_state_stats = combined_state_stats[state!="DC"]
-        
 
-#Explanatory = Violent Crime, response = Killed by Police
-glm.fit.pop <- glm(killedbypolice2015 ~ log(population2014),family="poisson",data=combined_state_stats)
 
-glm.fit.viol <- glm(killedbypolice2015 ~ log(police_officers2014)*log(violent_crime2014),offset=log(population2014),family="poisson",data=combined_state_stats)
 
 summary(glm.fit.viol)
