@@ -5,13 +5,11 @@ date: "December 14, 2015"
 output: html_document
 ---
 
-I've been exploring  data.table as an alternative to the basic data frame object in R. The reason is it's a lot faster. When I was first introduced to data.table I found the notation confusing. However, with a little bit of practice and help via documentation, this is easily overcome. With someone with a lot of SQL background, actually, data.table started to become <i>more</i> easy to use than R functions manipulating data frames.
+I was first introduced to **data.table** in the **Getting and Cleaning Data** course of the [Coursera Data Science Specialization](. It was recommended as an alternative to **dplyr** for working with large data sets. I found the syntax confusing and had become comfortable with dplyr so ignored the whole performance issue. 
 
-In this documentation, I will demonstrate the equivalents of some dplyr function in data.table.
+I got back into it after getting up to speed with Python & pandas, and then noticing how much slower R was with 5MB+ data sets. Putting data.table into play neutralizes the Python advantage and I've been very impressed as this [fread](http://www.inside-r.org/packages/cran/data.table/docs/fread) function for loading data shows. 
 
-But first, one major reason to use data.table - speed. 
-
-Having worked with python a lot recently, I'm finding read.csv() very slow. The creators of data.table have an answer to this - [fread](http://www.inside-r.org/packages/cran/data.table/docs/fread). The magnitude of difference in performance for loading this 10MB file is quite lovely. It is as good if not better than the python pandas read_table function.
+Special consideration, the *showProgress=FALSE* is **required** when using fread and knitr together and install the latest version, at least 1.9.6. 
 
 ```r
 >library(data.table)
@@ -23,11 +21,18 @@ Having worked with python a lot recently, I'm finding read.csv() very slow. The 
    0.29    0.08    5.40 
 ```
 
-Special consideration, the showProgress=FALSE is **required** when using fread and knitr together. 
-```{r data_loading, include=FALSE}
+I also got used to the syntax and have embraced it. I decided that a side by side comparison of dplyr and data.table functions would be helpful for both myself and perhaps others as well.  
+
+With someone with a lot of SQL background, actually, data.table started to become <i>more</i> easy to use than R functions manipulating data frames.
+
+
+```{r data_loading, warning=FALSE, message=FALSE, echo=FALSE,cache=TRUE}
+R.version.string
+paste0("data table version - ",packageVersion("data.table"))
 library(data.table)
 library(dplyr)
-racepopDT = fread("http://www.census.gov/popest/data/state/asrh/2014/files/SC-EST2014-ALLDATA6.csv",showProgress=FALSE)
-racepopDF = read.csv("http://www.census.gov/popest/data/state/asrh/2014/files/SC-EST2014-ALLDATA6.csv",stringsAsFactors=FALSE)
+racepop = fread("http://www.census.gov/popest/data/state/asrh/2014/files/SC-EST2014-ALLDATA6.csv",showProgress=FALSE)
 ```
 
+```{r data_loading, warning=FALSE, message=FALSE, echo=FALSE}
+```
