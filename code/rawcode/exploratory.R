@@ -49,7 +49,7 @@ ggplot(thecounted_and_crime,aes(x=median_age2014,y=log(killedbypolice2015_per100
         geom_point() + geom_smooth(method="lm")
 
 
-plot_labels = setNames(thecounted_and_crime_labels$variable,thecounted_and_crime_labels$label)
+plot_labels <- setNames(thecounted_and_crime_labels$variable,thecounted_and_crime_labels$label)
 
 #thecounted_and_crime = subset(thecounted_and_crime,state!="DC")
 
@@ -119,23 +119,53 @@ summary(lm.killed)
 
 #Using negative binomial
 
-nb.killed <- glm.nb(killedbypolice2015 ~ median_age2014 + log(violent_crime2014) + 
-                            log(police_officers2014) + log(population_black2014) + 
-                            log(population_hispanic2014) + log(population_male2014) + offset(log(population2014)),
+
+nb.killed0 <- glm.nb(killedbypolice2015 ~ 1 + offset(log(population2014)),
+                     data=thecounted_and_crime)
+nb.killed1 <- glm.nb(killedbypolice2015 ~ log(violent_crime2014) + offset(log(population2014)),
+                     data=thecounted_and_crime)
+
+nb.killed2 <- glm.nb(killedbypolice2015 ~ log(violent_crime2014) + 
+                             log(police_officers2014) + offset(log(population2014)),
+                     data=thecounted_and_crime)
+
+nb.killed3 <- glm.nb(killedbypolice2015 ~ log(violent_crime2014) + 
+                            log(police_officers2014) + log(population_black2014) + offset(log(population2014)),
                     data=thecounted_and_crime)
+
+nb.killed4 <- glm.nb(killedbypolice2015 ~ log(violent_crime2014) + 
+                            log(police_officers2014) + log(population_black2014) + 
+                            log(population_hispanic2014)  + offset(log(population2014)),
+                    data=thecounted_and_crime)
+
+nb.killed <- glm.nb(killedbypolice2015 ~ log(violent_crime2014) + 
+                            log(police_officers2014) + log(population_black2014) + 
+                            log(population_hispanic2014) + log(population_15to44_male2014) + offset(log(population2014)),
+                    data=thecounted_and_crime)
+
+
+anova(nb.killed0,nb.killed1,nb.killed2,nb.killed3,nb.killed4,nb.killed)
 
 summary(nb.killed)
 glm.killed <- stepAIC(nb.killed,direction="both")
 summary(nb.killed)
 
-estimates <- predict(nb.killed, type="response", se.fit=T)$fit
-estimates_se <- predict(nb.killed, type="response", se.fit=T)$se.fit
-estimates_lower <-  estimates - 1.96*estimates_se
-estimates_upper <-  estimates + 1.96*estimates_se
+thecounted_and_crime$estimated_killed <- predict(nb.killed, type="response", se.fit=T)$fit
+thecounted_and_crime$estimated_killed_se <- predict(nb.killed, type="response", se.fit=T)$se.fit
+thecounted_and_crime$estimated_killed_lower <-  thecounted_and_crime$estimated_killed - 1.96*thecounted_and_crime$estimated_killed_se
+thecounted_and_crime$estimated_killed_upper <-  thecounted_and_crime$estimated_killed + 1.96*thecounted_and_crime$estimated_killed_se
 
-estimates_df <- as.data.frame(cbind(killedbypolice2015= thecounted_and_crime$killedbypolice2015,population2014=thecounted_and_crime$population2014,estimates,estimates_se,estimates_lower,estimates_upper))
+thecounted_and_crime$estimated_killed_resid <-  resid(nb.killed,type="resp")
 
-ggplot(data=estimates_df,aes(x=log(population2014),y=(killedbypolice2015)) + geom_point()
+
+ggplot(data=thecounted_and_crime,aes(x=log(population2014),y=log(estimated_killed))) + 
+        geom_point() + geom_point(aes(y=log(killedbypolice2015)),colour='red')
+       
+
+#Weird - This is a y vs y + actual 
+ggplot(data=thecounted_and_crime,aes(x=log(killedbypolice2015),y=(thecounted_and_crime$estimated_killed_resid/abs(thecounted_and_crime$estimated_killed_resid))*log(abs(estimated_killed_resid)))) + 
+        geom_point() 
+
 
 #Examining residuals vs estimated values
 

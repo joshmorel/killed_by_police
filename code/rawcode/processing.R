@@ -11,7 +11,7 @@ library(xlsx)
 
 #1) The Counted
 #Loading data downloaded from The Counted - http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/about-the-counted
-thecounted = fread("data/the-counted.csv",showProgress=FALSE)
+thecounted <- fread("data/the-counted.csv",showProgress=FALSE)
 
 #Counting killings by state, need to calculate # killed to sort in plot. 
 #Equivalent in dplyr of: group_by(thecounted,state) %>% summarize(killed=n()) %>% arrange(-killed)
@@ -37,32 +37,18 @@ state_pop <- state_pop[!(STATE %in% c(0,72)),.(name=NAME,POPESTIMATE2014,STATE)]
 
 state_pop <- merge(state_codes,state_pop,by.x="name",by.y="name")
 
-#b) Median Age
-#Obtain median age by calculating cumulative sum by increasing age within each state
-#then taking the minimum age where the cumulative sum as percent of total population is greater than .50
+#b) Percent Male 15-44, Black & Hispanic
 
 race_pop <- fread("http://www.census.gov/popest/data/state/asrh/2014/files/SC-EST2014-ALLDATA6.csv",showProgress = FALSE)
 
 
-state_by_age <- race_pop[ORIGIN == 0 & SEX==0 & !(STATE %in% c(0,72))
-                         ][,.(population2014 = sum(POPESTIMATE2014)),by = .(STATE,AGE)
-                           ][,.(AGE,totalpop = sum(population2014),
-                                cumulativesum = cumsum(population2014),
-                                pctoftotal=cumsum(population2014)/sum(population2014)),
-                             by=.(STATE)
-                             ][pctoftotal>=.5,.(median_age=min(AGE)),by=.(STATE)]
-
-
-state_by_age <- merge(state_pop,state_by_age,by.x="STATE",by.y="STATE")
-
-#c) Percent Male, Black & Hispanic
-
-state_by_race_gender <- race_pop[,.(population_male2014 = sum(ifelse(ORIGIN==0 & SEX==1,POPESTIMATE2014,0)),
+#Violence both from police and perpetrated is generally seen to be the problem of younger men, particularly blacks and hispanic   
+state_by_race_gender <- race_pop[,.(population_15to44_male2014 = sum(ifelse(ORIGIN==0 & SEX==1 & AGE>=15 & AGE <= 44,POPESTIMATE2014,0)),
                                     population_black2014 = sum(ifelse(ORIGIN==0 & SEX==0 & RACE==2,POPESTIMATE2014,0)),
                                     population_hispanic2014 = sum(ifelse(ORIGIN==2 & SEX==0,POPESTIMATE2014,0))
-                                 ),by=.(STATE)]
+),by=.(STATE)]
 
-state_pop_full <- merge(state_by_age,state_by_race_gender,by.x="STATE",by.y="STATE")
+state_pop_full <- merge(state_pop,state_by_race_gender,by.x="STATE",by.y="STATE")
 
 
 #Combine 1 & 2
@@ -129,9 +115,8 @@ thecounted_pop_crime_police <- merge(thecounted_pop_crime,police,by.x="name",by.
 ## Drop, rename and reorder columns for better organized data set 
 thecounted_pop_crime_police <- thecounted_pop_crime_police[,.(state,
                                                               name,
-                                                              median_age,
                                                               POPESTIMATE2014,
-                                                              population_male2014,
+                                                              population_15to44_male2014,
                                                               population_black2014,
                                                               population_hispanic2014,
                                                               killed,
@@ -142,28 +127,26 @@ thecounted_pop_crime_police <- thecounted_pop_crime_police[,.(state,
 
 setnames(thecounted_pop_crime_police,
          c("name",
-           "median_age",
            "POPESTIMATE2014",
            "killed",
            "Violent.crime1",
            "Murder.and..nonnegligent..manslaughter",
            "police_officers")
          ,c("state_name",
-            "median_age2014",
             "population2014",
             "killedbypolice2015",
             "violent_crime2014",
             "murder_nonnegligent_manslaughter2014",
             "police_officers2014"))
 
-thecounted_pop_crime_police[,c("population_male2014_percent",
+thecounted_pop_crime_police[,c("population_15to44_male2014_percent",
                         "population_black2014_percent",
                         "population_hispanic2014_percent",
                         "killedbypolice2015_per100k",
                         "violent_crime2014_per100k",
                         "murder_nonnegligent_manslaughter2014_per100k",
                         "police_officers2014_per100k"):=
-                             list(population_male2014/population2014,
+                             list(population_15to44_male2014/population2014,
                                   population_black2014/population2014,
                                   population_hispanic2014/population2014,
                                   killedbypolice2015/population2014*100000,
@@ -171,5 +154,10 @@ thecounted_pop_crime_police[,c("population_male2014_percent",
                                   murder_nonnegligent_manslaughter2014/population2014*100000,
                                   police_officers2014/population2014*100000)]
 
+
+# Add back properly capitalized state names for appearance
+thecounted_pop_crime_police <- merge(thecounted_pop_crime_police,state_codes,by.x="state",by.y="state")
+thecounted_pop_crime_police[,state_name:=name]
+thecounted_pop_crime_police[,name:=NULL]
 
 write.csv(thecounted_pop_crime_police,"data/thecounted_and_crime.csv",row.names = FALSE)
