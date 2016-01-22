@@ -21,7 +21,11 @@ shinyUI(fluidPage(
                       mainPanel(
                               tabsetPanel(type="tab",
                                           tabPanel("Frontpage",
-                                                   ggvisOutput("ggvisplot")
+                                                   ggvisOutput("ggvisplot"),
+                                                   h5("x count"),
+                                                   textOutput("xcnt"),
+                                                   h5("y count"),
+                                                   textOutput("ycnt")
 
                                           ),
                                           tabPanel("Summary",
