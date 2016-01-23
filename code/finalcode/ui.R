@@ -7,38 +7,43 @@ states <- setNames(states,c("United States",thecounted_and_crime$state_name))
 
 shinyUI(fluidPage(
         titlePanel(title ="People Killed by Police in the United States - 2015"),
-        sidebarLayout(position="right",
-                      sidebarPanel(h3("State stats"),
-                                   selectInput("state","See state stats", choices=states,selected="USA"),
-                                   #uiOutput("ggvisplot_ui"),
-                                   tableOutput("tbl_out")
-
-                                   #textOutput("mydata")
-                                   #tableOutput("mydata")
-                      ),
-                      mainPanel(
-                              tabsetPanel(type="tab",
-                                          tabPanel("Frontpage",
-                                                   ggvisOutput("ggvisplot"),
-                                                   h5("x count"),
-                                                   textOutput("xcnt"),
-                                                   h5("y count"),
-                                                   textOutput("ycnt")
-
-                                          ),
-                                          tabPanel("Summary",
-                                                   textOutput("something")
-                                                   #tableOutput("mydata")
-                                          ),
-                                          tabPanel("Data",
-                                                   downloadButton(outputId="dltbl",label="Download table"),
-                                                   tableOutput("mydata")
-                                          ),
-                                          tabPanel("Plot",
-                                                   plotOutput("myplot"),
-                                                   downloadButton(outputId="dlplot",label="Download plot")
-                                          )
-                              )
-                      )
+        fluidRow(
+                column(8,
+                       ggvisOutput("ggvisplot")
+                       
+                ),
+                column(4,
+                        wellPanel(
+                                h5("x count"),
+                                textOutput("xcnt"),
+                                h5("y count"),
+                                textOutput("ycnt"),
+                                h3("State stats"),
+                                selectInput("state","See state stats", choices=states,selected="USA"),
+                                #uiOutput("ggvisplot_ui"),
+                                tableOutput("tbl_out")
+                                #textOutput("mydata")
+                                #tableOutput("mydata")
+                        )
+                ),
+        fluidRow(
+                column(12,
+                       #Upon selection of xvar, state, count and related rate will be passed to data.frame which will be plotted
+                       selectInput("xvar","Select x-variable", choices=c("Killed by Police" = "killedbypolice2015",
+                                                                         "Violent Crime" = "violent_crime2014"),
+                                                                         selected="killedbypolice2015"),
+                       selectInput("yvar","Select y-variable", choices=c("",
+                                                                        "Killed by Police" = "killedbypolice2015",
+                                                                         "Violent Crime" = "violent_crime2014"),
+                                   selected="")
+                       
+                )
+        ),
+        fluidRow(
+                column(12,
+                       tableOutput("tbl2")
+                )
+        )
+        
         )
 ))

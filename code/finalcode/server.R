@@ -1,7 +1,17 @@
 require(shiny)
 require(ggvis)
 require(dplyr)
-require(MASS)
+
+thecounted_and_crime <- read.csv("../../data/thecounted_and_crime.csv",stringsAsFactors = FALSE)
+thecounted_and_crime_usa <- read.csv("../../data/thecounted_and_crime_usa.csv",stringsAsFactors = FALSE)
+rownames(thecounted_and_crime) <- thecounted_and_crime$state
+thecounted_and_crime$id <- 1:nrow(thecounted_and_crime)
+
+
+Statistic <-  c("State", "State Name", "Population (2014)", "Police Officers (2014)", "Police Officers per 100k Pop.",
+                "Killed by Police (2015)", "Killed by Police per 100k Pop.", "Murder & Non-neg. Manslaughter (2014)", "Murder & Non-neg. Manslaughter per 100k Pop.",
+                "Violent Crime (2014)", "Violent Crime per 100k Pop.")
+
 
 shinyServer(
         # Add session when using updateSelectInput
@@ -9,120 +19,91 @@ shinyServer(
                 x <- 0
                 y <- 0
 
-                thecounted_and_crime <- read.csv("../../data/thecounted_and_crime.csv",stringsAsFactors = FALSE)
-                rownames(thecounted_and_crime) <- thecounted_and_crime$state
-                thecounted_and_crime$hovered <- factor(0,levels=c(0,1))
-                thecounted_and_crime$clicked <- factor(0,levels=c(0,1))
-                thecounted_and_crime_usa <- read.csv("../../data/thecounted_and_crime_usa.csv",stringsAsFactors = FALSE)
-                
-                #For display of key statistics in side panel
-                Statistic <-  c("State", "State Name", "Population (2014)", "Police Officers (2014)", "Police Officers per 100k Pop.",
-                                "Killed by Police (2015)", "Killed by Police per 100k Pop.", "Murder & Non-neg. Manslaughter (2014)", "Murder & Non-neg. Manslaughter per 100k Pop.",
-                                "Violent Crime (2014)", "Violent Crime per 100k Pop.")
-                
-                Value <- select(thecounted_and_crime_usa, state, state_name,population2014, police_officers2014,police_officers2014_per100k,killedbypolice2015,killedbypolice2015_per100k,murder_nonnegligent_manslaughter2014,murder_nonnegligent_manslaughter2014_per100k,violent_crime2014,violent_crime2014_per100k)
-                Value <- as.character(t(Value))
-                thecounted_and_crime_display <- data.frame(Statistic,Value)
-                
-                
-                
-                thecounted_and_crime$id <- 1:nrow(thecounted_and_crime)
-                
-                tip_value <- function(x) {
-                        if(is.null(x)) return(NULL)
-                        r <- thecounted_and_crime[thecounted_and_crime$id == x$id,]
-                        paste0(r$state_name,":<br />",r$killedbypolice2015," killed by police",collapse="")
-                }
-                
-                tip_click <- function(x) {
-                        #if(is.null(x)) return(NULL)
-                        cat(paste0("\n",as.character(x)),collapse="")
-                        #z <- x[1,5]
-                        updateSelectInput(session,"state",selected = "CA")
-                        y <<- y + 1
-                        output$ycnt <- renderText({y})
-                        #return(r)
-                        
-                }
-                
-                update_selection = function(data,location,session){
-                        if(is.null(data)) return(NULL)
-                        cat(paste0("\n",as.character(data)))
-                        updateSelectInput(session
-                                          ,"state"
-                                          ,selected=data[1,5])
-                        
-                        y <<- y + 1
-                        output$ycnt <- renderText({y})
-                        
-                }
-
-                render_dotplot <- function(thecounted_and_crime) {
-                        thecounted_and_crime %>% ggvis(~killedbypolice2015_per100k,~reorder(state,-killedbypolice2015_per100k),size=~killedbypolice2015,fill=~clicked,key := ~id) %>%
-                                layer_points() %>%
-                                add_axis("y",title= "State") %>%
-                                add_axis("x",title="Killed by Police per 100k") %>%
-                                add_legend("size",title="Number Killed") %>%
-                                hide_legend("fill") %>%
-                                add_tooltip(tip_value,"hover") %>%
-                                handle_click(update_selection) #{
-                                        #cat("\n-----\n",as.character(data))
-                                        #updateSelectInput(session,"state",selected = data[1,5])
-                                        #cat(paste0("\n",data[1,5],collapse=""))
-                                        #y <<- y + 1
-                                        #output$ycnt <- renderText({y})
-                                        
-                                #}
-                        #)
-                }
-                
-                # The default initial plot
-                
-
-                reactive({
-                        render_dotplot(thecounted_and_crime)
-                        # In shiny apps, need to register ggvis observers
-                        # and tell shiny where to put the controls
-                }) %>% bind_shiny("ggvisplot")
-                
-                # Listens for any change of input$state and updates table accordingly 
-                observeEvent(input$state, {
-
-                        x <<- x + 1
-                        output$xcnt <- renderText({x})
-                        if(input$state=="USA") {
+                #For display of statistics in side panel, defaults to United States totals
+                update_side_table <- function(stateIn="USA") {
+                        if(stateIn=="USA") {
                                 Value <- select(thecounted_and_crime_usa, state, state_name,population2014, police_officers2014,police_officers2014_per100k,killedbypolice2015,killedbypolice2015_per100k,murder_nonnegligent_manslaughter2014,murder_nonnegligent_manslaughter2014_per100k,violent_crime2014,violent_crime2014_per100k)
                         }
                         else {
-                                Value <- filter(thecounted_and_crime,state==input$state) %>% select(state, state_name,population2014, police_officers2014,police_officers2014_per100k,killedbypolice2015,killedbypolice2015_per100k,murder_nonnegligent_manslaughter2014,murder_nonnegligent_manslaughter2014_per100k,violent_crime2014,violent_crime2014_per100k)
+                                Value <- filter(thecounted_and_crime,state==stateIn) %>% select(state, state_name,population2014, police_officers2014,police_officers2014_per100k,killedbypolice2015,killedbypolice2015_per100k,murder_nonnegligent_manslaughter2014,murder_nonnegligent_manslaughter2014_per100k,violent_crime2014,violent_crime2014_per100k)
                         }
                         Value <- as.character(t(Value))
                         thecounted_and_crime_display <- data.frame(Statistic,Value)
                         output$tbl_out <- renderTable({
                                 thecounted_and_crime_display
                         })
-                        
-                        if(input$state!="USA") {
-                                #thecounted_and_crime <- thecounted_and_crime
-                                thecounted_and_crime$clicked <- factor(0,levels=c(0,1))
-                                thecounted_and_crime[input$state,"clicked"] <- 1
+                }
 
-                                reactive({
-                                        render_dotplot(thecounted_and_crime)
-                                        # In shiny apps, need to register ggvis observers
-                                        # and tell shiny where to put the controls
-                                #}) %>% bind_shiny("ggvisplot")
-                                
-                                }) %>% bind_shiny("ggvisplot")
-                                
+                plotData <- reactive({
+                        if(input$yvar==""){
+                                cols <- grep(input$xvar,colnames(thecounted_and_crime),value=TRUE)
+                                d <- thecounted_and_crime[,c("state",cols,"id")]
+                                names(d) <- c("state","count","rate","id")
+                                d
                         }
+                })
+                
+                output$tbl2 <- renderTable({plotData()})
+
+                
+                tip_value <- function(x) {
+                        if(is.null(x)) return(NULL)
+                        r <- thecounted_and_crime[thecounted_and_crime$id == x$id,]
+                        paste0(r$state_name," --> click to view more stats",collapse="")
+                }
+                
+                update_selection <- function(data,location,session){
+                        if(is.null(data)) return(NULL)
+                        cat(as.character(data))
+                        r <- thecounted_and_crime[thecounted_and_crime$id == data$id,]
+                        updateSelectInput(session
+                                          ,"state"
+                                          ,selected=r$state)
+                        y <<- y + 1
+                        output$ycnt <- renderText({y})
+                }
+                render_dotplot <- function(plotData) {
                         
+
+                        #ggvis_0.4.2 has bug where scaling of points is not done correctly, so creating workaround hack
+                        size_scaler <- (min(plotData$count)+1)/3
+                        size_max <- max(plotData$count)
+                        plotData %>% ggvis(~rate,~reorder(state,-rate),key := ~id) %>%
+                                layer_points(fillOpacity := .5,fillOpacity.hover:=.9,fill.hover:="red",size:=~count/size_scaler,size.hover:=size_max/size_scaler*1.1) %>%
+                                add_axis("y",title= "State") %>%
+                                add_axis("x",title="rate") %>%
+                                add_tooltip(tip_value,"hover") %>%
+                                handle_click(update_selection) %>%
+                                set_options(width = "auto", height = "600", resizable=FALSE) 
+
+                        
+                        #size_scaler <- (min(thecounted_and_crime$killedbypolice2015)+1)/3
+                        
+                        #thecounted_and_crime %>% ggvis(~killedbypolice2015_per100k,~reorder(state,-killedbypolice2015_per100k),key := ~id) %>%
+                        #        layer_points(fillOpacity := .5,fillOpacity.hover:=.9,fill.hover:="red",size:=~killedbypolice2015/size_scaler,size.hover:=300) %>%
+                        #        add_axis("y",title= "State") %>%
+                        #        add_axis("x",title="Killed by Police per 100k") %>%
+                        #        add_tooltip(tip_value,"hover") %>%
+                        #        handle_click(update_selection) %>%
+                        #        set_options(width = "auto", height = "600", resizable=FALSE)
+                        #)
+                }
+                
+                # The default initial plot
+                reactive({
+                        render_dotplot(plotData())
+                        # In shiny apps, need to register ggvis observers
+                        # and tell shiny where to put the controls
+                }) %>% bind_shiny("ggvisplot")
+                
+                # Listens for any change of input$state and updates table accordingly 
+                observeEvent(input$state, {
+                        x <<- x + 1
+                        output$xcnt <- renderText({x})
+                        update_side_table(input$state)
                 })
                 
                 
-
-                
-
         }
 )
 

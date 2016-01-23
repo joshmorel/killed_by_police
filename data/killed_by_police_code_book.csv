@@ -2,12 +2,16 @@ variable,label,description,source
 state,State Code,State two character code,
 state_name,State Name,State name,
 population2014,Population - Total,Population estimate for 2014,http://www.census.gov/popest/data/index.html
-population_black2014,Population - Black or African American,Population estimate for 2014 - with one race reported as black or african american,
+population_15to44_male2014,"Population - Male, 15 to 44",Population estimate for 2014 - where sex is male and age is greater than 15 and less than or equal to 44,http://www.census.gov/popest/data/index.html
+population_black2014,Population - Black or African American,Population estimate for 2014 - with one race reported as black or african american,http://www.census.gov/popest/data/index.html
+population_hispanic2014,Population - Hispanic or Latino,Population estimate for 2014 - any race with orgin reported as hispanic or latino,http://www.census.gov/popest/data/index.html
 killedbypolice2015,Killed by Police - Count,Number of people killed by police in 2015 as reported to The Guardian (The Counted Project),http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/the-counted-police-killings-us-database
 violent_crime2014,Violent Crime - Count,"Violent crimes reported in 2014 including muder & non-negligent homicide, sexual assault, aggrevated assault & robbery, collected by the FBI",https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2014/crime-in-the-u.s.-2014
-murder_nonnegligent_manslaughter2014,Murder & Non-negligent Manslaughter - Count,"Muder & non-negligent homicide in 2014, sexual assault, collected by the FBI",https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2014/crime-in-the-u.s.-2014
+murder_nonnegligent_manslaughter2014,Murder & Non-negligent Manslaughter - Count,"Muder & non-negligent homicide in 2014, collected by the FBI",https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2014/crime-in-the-u.s.-2014
 police_officers2014,Police Officers Employed - Count,"Police officers employed in 2014, collected by the FBI",https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2014/crime-in-the-u.s.-2014
+population_15to44_male2014_percent,"Male, 15 to 44 - Percent of Total Population","(Population - Male, 15 to 44) / (Population - Total)",
 population_black2014_percent,Black or African American - Percent of Total Population,(Population - Black or African American) / (Population - Total),
+population_hispanic2014_percent,Hispanic or Latino - Percent of Total Population,(Population - Hispanic or Latino) / (Population - Total),
 killedbypolice2015_per100k,Killed by Police - per 100k Population,(Killed by Police - Count) / Population * 100000,
 violent_crime2014_per100k,Violent Crime - per 100k Population,(Violent Crime - Count) / Population * 100000,
 murder_nonnegligent_manslaughter2014_per100k,Murder & Non-negligent Manslaughter - per 100k Population,(Murder & Non-negligent Manslaughter - Count) / Population * 100000,
