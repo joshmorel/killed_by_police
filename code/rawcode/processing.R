@@ -146,18 +146,38 @@ thecounted_pop_crime_police[,c("population_15to44_male2014_percent",
                         "violent_crime2014_per100k",
                         "murder_nonnegligent_manslaughter2014_per100k",
                         "police_officers2014_per100k"):=
-                             list(population_15to44_male2014/population2014,
-                                  population_black2014/population2014,
-                                  population_hispanic2014/population2014,
-                                  killedbypolice2015/population2014*100000,
-                                  violent_crime2014/population2014*100000,
-                                  murder_nonnegligent_manslaughter2014/population2014*100000,
-                                  police_officers2014/population2014*100000)]
+                             list(round(population_15to44_male2014/population2014,4),
+                                  round(population_black2014/population2014,4),
+                                  round(population_hispanic2014/population2014,4),
+                                  round(killedbypolice2015/population2014*100000,3),
+                                  round(violent_crime2014/population2014*100000,3),
+                                  round(murder_nonnegligent_manslaughter2014/population2014*100000,3),
+                                  round(police_officers2014/population2014*100000,3))]
 
 
 # Add back properly capitalized state names for appearance
 thecounted_pop_crime_police <- merge(thecounted_pop_crime_police,state_codes,by.x="state",by.y="state")
 thecounted_pop_crime_police[,state_name:=name]
 thecounted_pop_crime_police[,name:=NULL]
-
 write.csv(thecounted_pop_crime_police,"data/thecounted_and_crime.csv",row.names = FALSE)
+
+# Creates a single USA totals row
+thecounted_pop_crime_police_usa <- thecounted_pop_crime_police[,c("state","state_name") := list("USA","United States")]
+thecounted_pop_crime_police_usa <- thecounted_pop_crime_police_usa[,lapply(.SD,sum),by=.(state,state_name)]
+thecounted_pop_crime_police_usa[,c("population_15to44_male2014_percent",
+                                   "population_black2014_percent",
+                                   "population_hispanic2014_percent",
+                                   "killedbypolice2015_per100k",
+                                   "violent_crime2014_per100k",
+                                   "murder_nonnegligent_manslaughter2014_per100k",
+                                   "police_officers2014_per100k"):=
+                                        list(round(population_15to44_male2014/population2014,4),
+                                             round(population_black2014/population2014,4),
+                                             round(population_hispanic2014/population2014,4),
+                                             round(killedbypolice2015/population2014*100000,3),
+                                             round(violent_crime2014/population2014*100000,3),
+                                             round(murder_nonnegligent_manslaughter2014/population2014*100000,3),
+                                             round(police_officers2014/population2014*100000,3))]
+
+
+write.csv(thecounted_pop_crime_police_usa,"data/thecounted_and_crime_usa.csv",row.names = FALSE)

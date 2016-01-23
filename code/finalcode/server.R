@@ -8,8 +8,7 @@ shinyServer(
         function(input, output,session) {
                 x <- 0
                 y <- 0
-                
-                
+
                 thecounted_and_crime <- read.csv("../../data/thecounted_and_crime.csv",stringsAsFactors = FALSE)
                 rownames(thecounted_and_crime) <- thecounted_and_crime$state
                 thecounted_and_crime$hovered <- factor(0,levels=c(0,1))
@@ -36,12 +35,25 @@ shinyServer(
                 }
                 
                 tip_click <- function(x) {
-                        if(is.null(x)) return(NULL)
-                        r <- thecounted_and_crime[thecounted_and_crime$id == x$id,]
-                        updateSelectInput(session,"state",selected = r$state)
+                        #if(is.null(x)) return(NULL)
+                        cat(paste0("\n",as.character(x)),collapse="")
+                        #z <- x[1,5]
+                        updateSelectInput(session,"state",selected = "CA")
                         y <<- y + 1
                         output$ycnt <- renderText({y})
-                        return(r$state)
+                        #return(r)
+                        
+                }
+                
+                update_selection = function(data,location,session){
+                        if(is.null(data)) return(NULL)
+                        cat(paste0("\n",as.character(data)))
+                        updateSelectInput(session
+                                          ,"state"
+                                          ,selected=data[1,5])
+                        
+                        y <<- y + 1
+                        output$ycnt <- renderText({y})
                         
                 }
 
@@ -53,7 +65,15 @@ shinyServer(
                                 add_legend("size",title="Number Killed") %>%
                                 hide_legend("fill") %>%
                                 add_tooltip(tip_value,"hover") %>%
-                                add_tooltip(tip_click,"click")
+                                handle_click(update_selection) #{
+                                        #cat("\n-----\n",as.character(data))
+                                        #updateSelectInput(session,"state",selected = data[1,5])
+                                        #cat(paste0("\n",data[1,5],collapse=""))
+                                        #y <<- y + 1
+                                        #output$ycnt <- renderText({y})
+                                        
+                                #}
+                        #)
                 }
                 
                 # The default initial plot
@@ -63,10 +83,11 @@ shinyServer(
                         render_dotplot(thecounted_and_crime)
                         # In shiny apps, need to register ggvis observers
                         # and tell shiny where to put the controls
-                }) %>% bind_shiny("ggvisplot","ggvisplot_ui")
+                }) %>% bind_shiny("ggvisplot")
                 
                 # Listens for any change of input$state and updates table accordingly 
                 observeEvent(input$state, {
+
                         x <<- x + 1
                         output$xcnt <- renderText({x})
                         if(input$state=="USA") {
@@ -90,7 +111,9 @@ shinyServer(
                                         render_dotplot(thecounted_and_crime)
                                         # In shiny apps, need to register ggvis observers
                                         # and tell shiny where to put the controls
-                                }) %>% bind_shiny("ggvisplot","ggvisplot_ui")
+                                #}) %>% bind_shiny("ggvisplot")
+                                
+                                }) %>% bind_shiny("ggvisplot")
                                 
                         }
                         

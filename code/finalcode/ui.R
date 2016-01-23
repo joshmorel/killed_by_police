@@ -6,13 +6,11 @@ states <- c("USA",states)
 states <- setNames(states,c("United States",thecounted_and_crime$state_name))
 
 shinyUI(fluidPage(
-        #Fluid pages scale their components in realtime to fill available browser width.
         titlePanel(title ="People Killed by Police in the United States - 2015"),
-        # Sidebar layout creates a layout with a sidebar and main area
         sidebarLayout(position="right",
                       sidebarPanel(h3("State stats"),
                                    selectInput("state","See state stats", choices=states,selected="USA"),
-                                   uiOutput("ggvisplot_ui"),
+                                   #uiOutput("ggvisplot_ui"),
                                    tableOutput("tbl_out")
 
                                    #textOutput("mydata")
