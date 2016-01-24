@@ -43,14 +43,15 @@
     <!-- SLIDES -->
     <slide class="" id="slide-1" style="background:;">
   <hgroup>
-    <h2>Read-And-Delete</h2>
+    <h2>Background</h2>
   </hgroup>
   <article data-timings="">
-    <ol>
-<li>Edit YAML front matter</li>
-<li>Write using R Markdown</li>
-<li>Use an empty line followed by three dashes to separate slides!</li>
-</ol>
+    <p>In response to the string of highly publicized police killings of African Americans in the United States, <b>The Guardian</b> initiated a project to build a more comprehensive record of people killed by police in the United States. This project, <a href="http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/the-counted-police-killings-us-database">The Counted</a>, provides a very interesting data set to expand upon for further investigation on a very timely topic - police brutality in the United States.</p>
+
+<div style='text-align: center;'>
+<a title="By The All-Nite Images [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File%3ABlack_Lives_Matter_protest.jpg">
+<img width="512" alt="Black Lives Matter protest" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Black_Lives_Matter_protest.jpg/512px-Black_Lives_Matter_protest.jpg"/>
+</a></div>
 
   </article>
   <!-- Presenter Notes -->
@@ -58,10 +59,64 @@
 
 <slide class="class" id="id" style="background:;">
   <hgroup>
-    <h2>Slide 2</h2>
+    <h2>The Data</h2>
   </hgroup>
   <article data-timings="">
-    
+    <p>The primary data of interest is <b>Rate of People Killed by Police by Population</b>. As this plot shows, <b>Wyoming, New Mexico &amp; Oklahoma</b> are distinct outliers. Further analysis could identify what confounding variables might be common to these states explaining the higher rate. This plot is rendered in <code>ggplot2</code>. I ran into too much difficulty getting <code>ggvis</code> to work in <code>slidify</code>, unfortunately.</p>
+
+<p><img src="assets/fig/ggvisdata-1.png" title="plot of chunk ggvisdata" alt="plot of chunk ggvisdata" style="display: block; margin: auto;" /></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>The App - Front Page</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The app is published and available on <a href="https://josh-morel.shinyapps.io/killed_by_police/">Shiny Apps</a>, consisting of three tabs. The front page and first tab hosts an interactive <code>ggvis</code> dot-plot of <b>People Killed by Police</b> by state. The interactive features include:</p>
+
+<div style='text-align: center;'><img width="60%" alt="Killed by Police Dot-plot" src="assets/img/dotplot_demo.png"/></div>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>The App - Leaflet Map &amp; Downloadable files</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>The second tab provides an interactive leaflet map. Clicking on the data-point displays a pop-up, which links back to the specific The Counted database entry. </p>
+
+<p>The third and final tab provides downloadable state-level data and the code book. </p>
+
+<div style='text-align: center;'><img width="80%" alt="Killed by Police Leaflet" src="assets/img/leaflet_demo.png"/></div>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h2>Acknowledgements</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>I would like to provide the following acknowledgements for the data used:</p>
+
+<ul>
+<li><a href="http://www.theguardian.com/us-news/ng-interactive/2015/jun/01/the-counted-police-killings-us-database">The Guardian</a> (People Killed by Police)</li>
+<li><a href="http://www.census.gov/popest/data/index.html">United States Census Bureau</a> (Population Demographics)</li>
+<li><a href="https://www.fbi.gov/about-us/cjis/ucr/crime-in-the-u.s/2014/crime-in-the-u.s.-2014">Federal Bureau of Investigation</a> (Crime &amp; Police)</li>
+</ul>
+
+<p>And of course to the hard working folks who build, maintain and educate on <code>R</code>, <code>RStudio</code>, <code>slidify</code>, <code>shiny</code>, <code>ggvis</code>, <code>leaflet</code>, <code>ggplot2</code>, <code>data.table</code>, <code>knitr</code>, <code>pandoc</code> and more.</p>
+
+<p>For the code used to build the shiny app and to do the initial data processing visit by <a href="https://github.com/kitjosh1050/killed_by_police">github repository</a>.</p>
+
+<p>Author: <a href="kitjosh1050.github.io">Josh Morel</a></p>
+
   </article>
   <!-- Presenter Notes -->
 </slide>
@@ -72,14 +127,32 @@
     <ul>
       <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=1 title='Read-And-Delete'>
+        data-slide=1 title='Background'>
          1
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=2 title='Slide 2'>
+        data-slide=2 title='The Data'>
          2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='The App - Front Page'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='The App - Leaflet Map &amp; Downloadable files'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Acknowledgements'>
+         5
       </a>
     </li>
   </ul>
