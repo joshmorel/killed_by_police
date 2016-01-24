@@ -14,3 +14,7 @@ vignettes/*.pdf
 .html
 
 *misc/
+
+*rsconnect*
+
+*slidify/
